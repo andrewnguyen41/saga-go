@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// MemoryPubSub implements PubSub interface using in-memory channels
+// MemoryPubSub implements PubSub interface using in-memory channelss
 type MemoryPubSub struct {
 	mu          sync.RWMutex
 	subscribers map[string][]func(Message)
