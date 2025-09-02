@@ -31,7 +31,7 @@ func (o *Orchestrator) RegisterHandler(stepName string, handler StepHandler) {
 // StartSaga creates and starts a new saga
 func (o *Orchestrator) StartSaga(ctx context.Context, name string, steps []string, data map[string]interface{}) (*Saga, error) {
 	sagaID := uuid.New().String()
-	
+
 	saga := &Saga{
 		ID:        sagaID,
 		Name:      name,
@@ -40,7 +40,7 @@ func (o *Orchestrator) StartSaga(ctx context.Context, name string, steps []strin
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	// Create steps
 	for _, stepName := range steps {
 		stepID := uuid.New().String()
@@ -55,11 +55,11 @@ func (o *Orchestrator) StartSaga(ctx context.Context, name string, steps []strin
 		}
 		saga.Steps = append(saga.Steps, step)
 	}
-	
+
 	if err := o.storage.SaveSaga(ctx, saga); err != nil {
 		return nil, fmt.Errorf("failed to save saga: %w", err)
 	}
-	
+
 	// Start executing first step
 	if len(saga.Steps) > 0 {
 		msg := Message{
@@ -70,7 +70,7 @@ func (o *Orchestrator) StartSaga(ctx context.Context, name string, steps []strin
 		}
 		o.pubsub.Publish(ctx, "saga_events", msg)
 	}
-	
+
 	return saga, nil
 }
 
@@ -80,16 +80,16 @@ func (o *Orchestrator) ExecuteStep(ctx context.Context, stepID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get step: %w", err)
 	}
-	
+
 	if step.Status != StatusPending {
 		return nil // Already processed or processing
 	}
-	
+
 	handler, exists := o.handlers[step.Name]
 	if !exists {
 		return fmt.Errorf("no handler for step: %s", step.Name)
 	}
-	
+
 	// Mark step as processing
 	now := time.Now()
 	step.Status = StatusProcessing
@@ -97,12 +97,12 @@ func (o *Orchestrator) ExecuteStep(ctx context.Context, stepID string) error {
 	if err := o.storage.UpdateStep(ctx, step); err != nil {
 		return fmt.Errorf("failed to mark step as processing: %w", err)
 	}
-	
+
 	saga, err := o.storage.GetSaga(ctx, step.SagaID)
 	if err != nil {
 		return fmt.Errorf("failed to get saga: %w", err)
 	}
-	
+
 	// Merge saga data with step data
 	execData := make(map[string]interface{})
 	for k, v := range saga.Data {
@@ -111,33 +111,33 @@ func (o *Orchestrator) ExecuteStep(ctx context.Context, stepID string) error {
 	for k, v := range step.Data {
 		execData[k] = v
 	}
-	
+
 	err = handler.Execute(ctx, execData)
 	if err != nil {
 		// Mark step as failed
 		step.Status = StatusFailed
 		step.Error = err.Error()
 		o.storage.UpdateStep(ctx, step)
-		
+
 		// Start compensation
 		o.startCompensation(ctx, saga)
 		return nil
 	}
-	
+
 	// Mark step as completed and save any data changes
 	step.Status = StatusCompleted
 	step.Data = execData
 	o.storage.UpdateStep(ctx, step)
-	
+
 	// Update saga data with step results
 	for k, v := range execData {
 		saga.Data[k] = v
 	}
 	o.storage.SaveSaga(ctx, saga)
-	
+
 	// Continue to next step or complete saga
 	o.continueOrComplete(ctx, saga)
-	
+
 	return nil
 }
 
@@ -147,21 +147,21 @@ func (o *Orchestrator) CompensateStep(ctx context.Context, stepID string) error 
 	if err != nil {
 		return fmt.Errorf("failed to get step: %w", err)
 	}
-	
+
 	if step.Status != StatusCompleted {
 		return nil // Nothing to compensate
 	}
-	
+
 	handler, exists := o.handlers[step.Name]
 	if !exists {
 		return fmt.Errorf("no handler for step: %s", step.Name)
 	}
-	
+
 	saga, err := o.storage.GetSaga(ctx, step.SagaID)
 	if err != nil {
 		return fmt.Errorf("failed to get saga: %w", err)
 	}
-	
+
 	// Merge saga data with step data
 	execData := make(map[string]interface{})
 	for k, v := range saga.Data {
@@ -170,15 +170,15 @@ func (o *Orchestrator) CompensateStep(ctx context.Context, stepID string) error 
 	for k, v := range step.Data {
 		execData[k] = v
 	}
-	
+
 	err = handler.Compensate(ctx, execData)
 	if err != nil {
 		step.Error = err.Error()
 	}
-	
+
 	step.Status = StatusCompensated
 	o.storage.UpdateStep(ctx, step)
-	
+
 	return nil
 }
 
@@ -204,7 +204,7 @@ func (o *Orchestrator) continueOrComplete(ctx context.Context, saga *Saga) {
 			break
 		}
 	}
-	
+
 	// Check if there's a next step
 	if currentIndex+1 < len(saga.Steps) {
 		nextStep := saga.Steps[currentIndex+1]
@@ -225,7 +225,7 @@ func (o *Orchestrator) continueOrComplete(ctx context.Context, saga *Saga) {
 func (o *Orchestrator) startCompensation(ctx context.Context, saga *Saga) {
 	saga.Status = StatusFailed
 	o.storage.SaveSaga(ctx, saga)
-	
+
 	// Compensate completed steps in reverse order
 	for i := len(saga.Steps) - 1; i >= 0; i-- {
 		step := saga.Steps[i]

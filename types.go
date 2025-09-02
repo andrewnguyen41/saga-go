@@ -9,10 +9,10 @@ import (
 type Status string
 
 const (
-	StatusPending    Status = "pending"
-	StatusProcessing Status = "processing"
-	StatusCompleted  Status = "completed"
-	StatusFailed     Status = "failed"
+	StatusPending     Status = "pending"
+	StatusProcessing  Status = "processing"
+	StatusCompleted   Status = "completed"
+	StatusFailed      Status = "failed"
 	StatusCompensated Status = "compensated"
 )
 
@@ -32,14 +32,14 @@ type Step struct {
 
 // Saga represents a saga transaction
 type Saga struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Status    Status    `json:"status"`
-	Steps     []Step    `json:"steps"`
+	ID        string                 `json:"id"`
+	Name      string                 `json:"name"`
+	Status    Status                 `json:"status"`
+	Steps     []Step                 `json:"steps"`
 	Data      map[string]interface{} `json:"data,omitempty"`
-	Error     string    `json:"error,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Error     string                 `json:"error,omitempty"`
+	CreatedAt time.Time              `json:"created_at"`
+	UpdatedAt time.Time              `json:"updated_at"`
 }
 
 // StepHandler defines how to execute and compensate a step

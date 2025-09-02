@@ -24,14 +24,14 @@ func NewMemoryStorage() *MemoryStorage {
 func (m *MemoryStorage) SaveSaga(ctx context.Context, saga *Saga) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	saga.UpdatedAt = time.Now()
 	if saga.CreatedAt.IsZero() {
 		saga.CreatedAt = time.Now()
 	}
-	
+
 	m.sagas[saga.ID] = saga
-	
+
 	// Also save steps
 	for i := range saga.Steps {
 		step := &saga.Steps[i]
@@ -41,29 +41,29 @@ func (m *MemoryStorage) SaveSaga(ctx context.Context, saga *Saga) error {
 		step.UpdatedAt = time.Now()
 		m.steps[step.ID] = step
 	}
-	
+
 	return nil
 }
 
 func (m *MemoryStorage) GetSaga(ctx context.Context, id string) (*Saga, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	saga, exists := m.sagas[id]
 	if !exists {
 		return nil, errors.New("saga not found")
 	}
-	
+
 	return saga, nil
 }
 
 func (m *MemoryStorage) UpdateStep(ctx context.Context, step *Step) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	step.UpdatedAt = time.Now()
 	m.steps[step.ID] = step
-	
+
 	// Update step in saga
 	if saga, exists := m.sagas[step.SagaID]; exists {
 		for i := range saga.Steps {
@@ -74,43 +74,43 @@ func (m *MemoryStorage) UpdateStep(ctx context.Context, step *Step) error {
 		}
 		saga.UpdatedAt = time.Now()
 	}
-	
+
 	return nil
 }
 
 func (m *MemoryStorage) GetStep(ctx context.Context, id string) (*Step, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	step, exists := m.steps[id]
 	if !exists {
 		return nil, errors.New("step not found")
 	}
-	
+
 	return step, nil
 }
 
 func (m *MemoryStorage) GetPendingSteps(ctx context.Context) ([]Step, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	var pending []Step
 	for _, step := range m.steps {
 		if step.Status == StatusPending {
 			pending = append(pending, *step)
 		}
 	}
-	
+
 	return pending, nil
 }
 
 func (m *MemoryStorage) GetStuckSteps(ctx context.Context, timeout time.Duration) ([]Step, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	var stuck []Step
 	now := time.Now()
-	
+
 	for _, step := range m.steps {
 		switch step.Status {
 		case StatusPending:
@@ -125,6 +125,6 @@ func (m *MemoryStorage) GetStuckSteps(ctx context.Context, timeout time.Duration
 			}
 		}
 	}
-	
+
 	return stuck, nil
 }
