@@ -40,6 +40,19 @@ jobs:
           exit 1
         fi
     
+    - name: Test examples
+      run: |
+        echo "Testing basic example..."
+        cd example/basic && go run main.go
+        
+        echo "Testing failure example..."
+        cd ../failure && go run main.go
+        
+        echo "Testing recovery example..."
+        cd ../recovery && go run main.go
+        
+        echo "All examples completed successfully!"
+    
     - name: Generate HTML coverage report
       run: go tool cover -html=coverage.out -o coverage.html
 
