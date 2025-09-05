@@ -100,11 +100,14 @@ graph TB
     
     S --> O
     
-    style S fill:#e1f5fe
-    style O fill:#f3e5f5
-    style ST fill:#e8f5e8
-    style PS fill:#fff3e0
-    style RM fill:#fce4ec
+    style S fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#ffffff
+    style O fill:#553c9a,stroke:#6b46c1,stroke-width:2px,color:#ffffff
+    style ST fill:#1a365d,stroke:#2c5282,stroke-width:2px,color:#ffffff
+    style PS fill:#744210,stroke:#a16207,stroke-width:2px,color:#ffffff
+    style RM fill:#702459,stroke:#9f2b68,stroke-width:2px,color:#ffffff
+    style SV1 fill:#234e52,stroke:#319795,stroke-width:2px,color:#ffffff
+    style SV2 fill:#234e52,stroke:#319795,stroke-width:2px,color:#ffffff
+    style SV3 fill:#234e52,stroke:#319795,stroke-width:2px,color:#ffffff
 ```
 
 ### Core Components
